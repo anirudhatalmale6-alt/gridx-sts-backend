@@ -249,6 +249,30 @@ exports.generateToken = async (req, res) => {
         ]
       );
 
+      // Auto-queue token for delivery to meter via API (if meter is registered)
+      try {
+        const [meterReg] = await conn.query(
+          'SELECT id FROM meter_registry WHERE drn = ? LIMIT 1',
+          [meterNo]
+        );
+        if (meterReg.length > 0) {
+          const [lastTx] = await conn.query(
+            'SELECT id FROM transactions WHERE reference = ? LIMIT 1',
+            [reference]
+          );
+          const txId = lastTx.length > 0 ? lastTx[0].id : null;
+          await conn.query(
+            `INSERT INTO token_delivery_queue (drn, token, transaction_id, delivery_method)
+             VALUES (?, ?, ?, 'api')`,
+            [meterNo, token, txId]
+          );
+          logger.info(`Token auto-queued for meter delivery: ${meterNo}`);
+        }
+      } catch (queueErr) {
+        // Non-fatal — token was still generated successfully
+        logger.warn('Failed to auto-queue token for meter delivery', { error: queueErr.message });
+      }
+
       await conn.commit();
 
       logger.info(`Token generated: ${reference} | Meter: ${meterNo} | kWh: ${kwh}`, {

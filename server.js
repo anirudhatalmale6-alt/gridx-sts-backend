@@ -24,6 +24,8 @@ const notificationsRoutes = require('./routes/notifications');
 const receiptsRoutes = require('./routes/receipts');
 const permissionsRoutes = require('./routes/permissions');
 const ussdRouter = require('./services/ussdService');
+const meterDashboardRoutes = require('./routes/meter');
+const { meterFacingRouter } = require('./routes/meter');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -127,6 +129,18 @@ app.use('/api/v1/notifications', notificationsRoutes);
 app.use('/api/v1/receipts', receiptsRoutes);
 app.use('/api/v1/permissions', permissionsRoutes);
 app.use('/api/v1', ussdRouter);
+app.use('/api/v1/meter', meterDashboardRoutes);   // Dashboard-facing meter endpoints (JWT auth)
+
+// Meter-facing endpoints mounted at root (no JWT — ESP32 firmware uses API key)
+// These MUST match the exact paths the firmware POSTs to:
+//   POST /meters/getAccessToken
+//   POST /meterPower/MeterLog/:DRN
+//   POST /meterEnergy/MeterLog/:DRN
+//   POST /meterCellNetwork/MeterLog/:DRN
+//   POST /meterLoadControl/MeterLog/:DRN
+//   POST /meterSTSTokesInfo/MeterLog/:DRN
+//   POST /credit/MeterLog/:DRN
+app.use(meterFacingRouter);
 
 // Start ISO 8583 switching server (third-party vendor integration)
 if (process.env.ISO8583_ENABLED === 'true') {
