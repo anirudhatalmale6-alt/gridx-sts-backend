@@ -16,6 +16,14 @@ const vendorsRoutes = require('./routes/vendors');
 const tariffsRoutes = require('./routes/tariffs');
 const reportsRoutes = require('./routes/reports');
 const adminRoutes = require('./routes/admin');
+const engineeringRoutes = require('./routes/engineering');
+const batchesRoutes = require('./routes/batches');
+const commissionsRoutes = require('./routes/commissions');
+const mapRoutes = require('./routes/map');
+const notificationsRoutes = require('./routes/notifications');
+const receiptsRoutes = require('./routes/receipts');
+const permissionsRoutes = require('./routes/permissions');
+const ussdRouter = require('./services/ussdService');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -111,6 +119,21 @@ app.use('/api/v1/vendors', vendorsRoutes);
 app.use('/api/v1/tariffs', tariffsRoutes);
 app.use('/api/v1/admin', adminRoutes);
 app.use('/api/v1/reports', reportsRoutes);
+app.use('/api/v1/engineering', engineeringRoutes);
+app.use('/api/v1/batches', batchesRoutes);
+app.use('/api/v1/commissions', commissionsRoutes);
+app.use('/api/v1/map', mapRoutes);
+app.use('/api/v1/notifications', notificationsRoutes);
+app.use('/api/v1/receipts', receiptsRoutes);
+app.use('/api/v1/permissions', permissionsRoutes);
+app.use('/api/v1', ussdRouter);
+
+// Start ISO 8583 switching server (third-party vendor integration)
+if (process.env.ISO8583_ENABLED === 'true') {
+  const { startISO8583Server } = require('./services/iso8583Service');
+  const iso8583Port = parseInt(process.env.ISO8583_PORT || '8583', 10);
+  startISO8583Server(iso8583Port);
+}
 
 // 404 handler for unmatched routes
 app.use((_req, res) => {
