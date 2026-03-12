@@ -77,7 +77,14 @@ exports.getRecentTransactions = async (req, res) => {
       [limit]
     );
 
-    return res.json(rows);
+    // MySQL returns DECIMAL columns as strings — cast to numbers
+    const parsed = rows.map((r) => ({
+      ...r,
+      amount: Number(r.amount),
+      kwh: Number(r.kwh),
+    }));
+
+    return res.json(parsed);
   } catch (err) {
     logger.error('Get recent transactions error', { error: err.message, stack: err.stack });
     return res.status(500).json({

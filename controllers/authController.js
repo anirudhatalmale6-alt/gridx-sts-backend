@@ -49,7 +49,7 @@ exports.login = async (req, res) => {
     const user = rows[0];
 
     // --- Verify password ---
-    const passwordValid = await bcrypt.compare(password, user.password);
+    const passwordValid = await bcrypt.compare(password, user.password_hash);
     if (!passwordValid) {
       logger.warn(`Login failed — wrong password for user: ${username}`);
       return res.status(401).json({
@@ -84,11 +84,15 @@ exports.login = async (req, res) => {
     );
 
     // --- Audit log ---
-    await pool.query(
-      `INSERT INTO audit_logs (user_id, action, details, ip_address, created_at)
-       VALUES (?, 'LOGIN', ?, ?, NOW())`,
-      [user.id, `User ${username} logged in`, req.ip]
-    );
+    try {
+      await pool.query(
+        `INSERT INTO audit_log (event, detail, username, type, ip_address, created_at)
+         VALUES (?, ?, ?, ?, ?, NOW())`,
+        ['User Login', `User ${username} logged in successfully`, username, 'login', req.ip]
+      );
+    } catch (_auditErr) {
+      // Non-fatal — don't block login if audit log fails
+    }
 
     logger.info(`User logged in: ${username} (id=${user.id})`);
 
@@ -128,11 +132,15 @@ exports.logout = async (req, res) => {
     );
 
     // Audit log
-    await pool.query(
-      `INSERT INTO audit_logs (user_id, action, details, ip_address, created_at)
-       VALUES (?, 'LOGOUT', ?, ?, NOW())`,
-      [userId, `User ${req.user.username} logged out`, req.ip]
-    );
+    try {
+      await pool.query(
+        `INSERT INTO audit_log (event, detail, username, type, ip_address, created_at)
+         VALUES (?, ?, ?, ?, ?, NOW())`,
+        ['User Logout', `User ${req.user.username} logged out`, req.user.username, 'login', req.ip]
+      );
+    } catch (_auditErr) {
+      // Non-fatal
+    }
 
     logger.info(`User logged out: ${req.user.username} (id=${userId})`);
 
@@ -233,7 +241,7 @@ exports.refreshToken = async (req, res) => {
 exports.getProfile = async (req, res) => {
   try {
     const [rows] = await pool.query(
-      `SELECT id, name, username, email, role, status, last_login, created_at
+      `SELECT id, name, username, role, status, last_login, created_at
        FROM users WHERE id = ? LIMIT 1`,
       [req.user.id]
     );
