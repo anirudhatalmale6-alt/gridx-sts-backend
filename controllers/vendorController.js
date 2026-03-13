@@ -7,7 +7,16 @@ const logger = require('../config/logger');
  */
 exports.getAll = async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM vendors ORDER BY name ASC');
+    const [rows] = await pool.query(`
+      SELECT id, code, name, location, status,
+             commission_rate AS commissionRate,
+             total_sales     AS totalSales,
+             transaction_count AS transactions,
+             balance,
+             operator_name   AS operator,
+             phone
+      FROM vendors ORDER BY name ASC
+    `);
 
     res.json({ success: true, data: rows });
   } catch (err) {

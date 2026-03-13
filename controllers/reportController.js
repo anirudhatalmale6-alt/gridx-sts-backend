@@ -120,10 +120,10 @@ exports.generate = async (req, res) => {
         return {
           vendorId: row.vendorId,
           vendorCode: row.vendorCode,
-          vendorName: row.vendorName,
+          vendor: row.vendorName,
           transactions: parseInt(row.transactions, 10),
           grossSales: Math.round(gross * 100) / 100,
-          totalKwh: Math.round(parseFloat(row.totalKwh || 0) * 100) / 100,
+          kwh: Math.round(parseFloat(row.totalKwh || 0) * 100) / 100,
           arrears,
           vat,
           commission,
