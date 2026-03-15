@@ -40,6 +40,10 @@ meterFacingRouter.post('/meterLoadControl/MeterLog/:DRN', handleLoadControl);
 meterFacingRouter.post('/meterSTSTokesInfo/MeterLog/:DRN', handleTokenInfo);
 meterFacingRouter.post('/credit/MeterLog/:DRN',           handleCreditTransfer);
 
+// Relay event logging (match firmware api.cpp: POST /meterRelayEvents/MeterLog/:DRN)
+const { receiveRelayEvents } = require('../controllers/relayEventController');
+meterFacingRouter.post('/meterRelayEvents/MeterLog/:DRN', receiveRelayEvents);
+
 // ============================================================================
 //  DASHBOARD-FACING ENDPOINTS (JWT auth required)
 //  Mounted under /api/v1/meter in server.js
