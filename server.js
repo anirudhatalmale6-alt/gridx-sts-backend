@@ -23,6 +23,7 @@ const mapRoutes = require('./routes/map');
 const notificationsRoutes = require('./routes/notifications');
 const receiptsRoutes = require('./routes/receipts');
 const permissionsRoutes = require('./routes/permissions');
+const healthRoutes = require('./routes/health');
 const ussdRouter = require('./services/ussdService');
 const meterDashboardRoutes = require('./routes/meter');
 const { meterFacingRouter } = require('./routes/meter');
@@ -131,6 +132,7 @@ app.use('/api/v1/map', mapRoutes);
 app.use('/api/v1/notifications', notificationsRoutes);
 app.use('/api/v1/receipts', receiptsRoutes);
 app.use('/api/v1/permissions', permissionsRoutes);
+app.use('/api/v1/meter-health', healthRoutes);
 app.use('/api/v1', ussdRouter);
 app.use('/api/v1/meter', meterDashboardRoutes);   // Dashboard-facing meter endpoints (JWT auth)
 
